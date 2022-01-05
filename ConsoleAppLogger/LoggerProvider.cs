@@ -12,6 +12,7 @@ namespace ConsoleAppLogger
 {
     internal sealed class LoggerProvider : IDisposable
     {
+        private bool _disposed;
         private readonly ILoggerFactory loggerFactory;
         private readonly string eventLogName;
         private readonly ITelemetryChannel telemetryChannel;
@@ -36,14 +37,22 @@ namespace ConsoleAppLogger
                             .AddConsole()
                 .AddEventSourceLogger()
                 /*
-                 * If the IntrumentationKey is null/Empty, no problem. No Application Insights logging
-                 * will occur. So local machine doesn't need this setting. When deployed to Azure
-                 * need to ensure ApplicationInsights:InstrumentationKey setting is present and valid
+                 * If the appInsightsInstrumentationKey is null/Empty, no problem. No Application
+                 * Insights logging will occur. So local machine doesn't need this setting.
+                 * When deployed to Azure, need to ensure ApplicationInsights:InstrumentationKey
+                 * setting is present and valid
                  */
                 .AddApplicationInsights(appInsightsInstrumentationKey);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
+                    /*
+                     * Before you can see EventLog entries in the Windows EventViewer, you need to
+                     * Create the LogName and Source using Powershell as an Administrator.
+                     * Use: New-EventLog -LogName eventLogName -Source eventLogName                    
+                     * Where eventLogName is the actual name such as "MyAppLog"
+                     * To Remove use: Remove-EventLog -LogName eventLogName   
+                     */
                     builder.AddEventLog(new EventLogSettings { LogName = eventLogName, SourceName = eventLogName });
                 }
             });
@@ -54,10 +63,20 @@ namespace ConsoleAppLogger
             return loggersDictionary.GetOrAdd(typeof(T), loggerFactory.CreateLogger<T>());
         }
 
+        private void Dispose(bool disposing)
+        {
+            if (disposing && !_disposed)
+            {
+                telemetryChannel.Flush();
+                telemetryChannel.Dispose();
+                _disposed = true;
+            }
+        }
+
         public void Dispose()
         {
-            telemetryChannel.Flush();
-            telemetryChannel.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
