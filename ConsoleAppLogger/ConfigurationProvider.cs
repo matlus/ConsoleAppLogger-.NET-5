@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -38,10 +37,14 @@ namespace ConsoleAppLogger
             return _configurationRoot[key];
         }
 
-        public IConfiguration GetLoggingSection()
+        public IConfiguration GetLoggingConfiguration()
+        {            
+            return _configurationRoot.GetSection("Logging");
+        }
+
+        public string GetAppInsightsInstrumentationKey()
         {
-            return _configurationRoot;
-            ////return _configurationRoot.GetSection("Logging");
+            return RetrieveConfigurationSettingValue("ApplicationInsights:InstrumentationKey");
         }
     }
 }
