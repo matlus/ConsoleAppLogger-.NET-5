@@ -34,13 +34,13 @@ namespace ConsoleAppLogger
                             .AddDebug()
 #endif
                             .AddConsole()
-                .AddEventSourceLogger();
+                .AddEventSourceLogger()
                 /*
                  * If the IntrumentationKey is null/Empty, no problem. No Application Insights logging
                  * will occur. So local machine doesn't need this setting. When deployed to Azure
                  * need to ensure ApplicationInsights:InstrumentationKey setting is present and valid
                  */
-                ////.AddApplicationInsights(appInsightsInstrumentationKey);
+                .AddApplicationInsights(appInsightsInstrumentationKey);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
