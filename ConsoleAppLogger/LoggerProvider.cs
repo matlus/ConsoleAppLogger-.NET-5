@@ -1,53 +1,74 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.ApplicationInsights;
 using Microsoft.Extensions.Logging.EventLog;
 using System;
+using System.Collections.Concurrent;
 
 namespace ConsoleAppLogger
 {
-    internal sealed class LoggerProvider
+    internal sealed class LoggerProvider : IDisposable
     {
-        private readonly ILoggerFactory loggerFactory;
+        ////private readonly ILoggerFactory loggerFactory;
         private readonly string applicationNamespaceName;
-        private ILogger logger;
+        private readonly IServiceProvider serviceProvider;
+        private readonly ITelemetryChannel telemetryChannel;
+        private readonly ConcurrentDictionary<Type, ILogger> loggersDictionary = new ConcurrentDictionary<Type, ILogger>();        
 
         public LoggerProvider(string applicationNamespaceName, Func<IConfiguration> loggingConfigurationSectionDelegate)
         {
             this.applicationNamespaceName = applicationNamespaceName;
 
-            loggerFactory = LoggerFactory.Create(builder =>
+            telemetryChannel = new InMemoryChannel();
+
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = telemetryChannel);
+
+            serviceCollection.AddLogging(builder =>
             {
                 builder
                 .ClearProviders()
                 .AddConfiguration(loggingConfigurationSectionDelegate())
 #if DEBUG
-                .AddDebug()
+                            .AddDebug()
 #endif
-                .AddConsole()
+                            .AddConsole()
                 .AddEventSourceLogger()
                 .AddEventLog(new EventLogSettings { LogName = applicationNamespaceName, SourceName = applicationNamespaceName })
-                .AddApplicationInsights("fac3c5d0-e9a5-420a-b854-2d627340f23b", applicationInsightsLoggerOptions =>
-                {
-                    applicationInsightsLoggerOptions.FlushOnDispose = true;
-                    applicationInsightsLoggerOptions.TrackExceptionsAsExceptionTelemetry = true;
-                });
+                .AddApplicationInsights(loggingConfigurationSectionDelegate()["ApplicationInsights:InstrumentationKey"]);
             });
-        }
 
-        public ILogger CreateLogger()
-        {
-            if (logger == null)
-            {
-                logger = loggerFactory.CreateLogger(applicationNamespaceName);
-            }
+            serviceProvider = serviceCollection.BuildServiceProvider();
 
-            return logger;
+            #region If you don't need Application Insights Logging, replace all of the code above (after the first) line with code below
+
+            ////            loggerFactory = LoggerFactory.Create(builder =>
+            ////            {
+            ////                builder
+            ////                .ClearProviders()
+            ////                .AddConfiguration(loggingConfigurationSectionDelegate())
+            ////#if DEBUG
+            ////                .AddDebug()
+            ////#endif
+            ////                .AddConsole()
+            ////                .AddEventSourceLogger()
+            ////                .AddEventLog(new EventLogSettings { LogName = applicationNamespaceName, SourceName = applicationNamespaceName });
+            ////            });
+            #endregion
         }
 
         public ILogger CreateLogger<T>()
         {
-            return logger = CreateLogger();
+            ////return loggersDictionary.GetOrAdd(typeof(T), loggerFactory.CreateLogger<T>());
+            return loggersDictionary.GetOrAdd(typeof(T), serviceProvider.GetRequiredService<ILogger<T>>());
+        }
+
+        public void Dispose()
+        {
+            telemetryChannel.Flush();
+            telemetryChannel.Dispose();
         }
     }
 }

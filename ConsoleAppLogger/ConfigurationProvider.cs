@@ -34,23 +34,14 @@ namespace ConsoleAppLogger
         }
 
         private string RetrieveConfigurationSettingValue(string key)
-        {
-            _configurationRoot.GetSection("logging");
+        {            
             return _configurationRoot[key];
         }
 
         public IConfiguration GetLoggingSection()
         {
-            return _configurationRoot.GetSection("Logging");
-        }
-
-        public LogLevel GetNamesSpecificLogLevel(string namespaceName)
-        {
-            var logLevelValue = RetrieveConfigurationSettingValue($"Logging:LogLevel:{namespaceName}");
-            if (Enum.TryParse(logLevelValue, out LogLevel logLevel))
-                return logLevel;
-            
-            return LogLevel.Error;
+            return _configurationRoot;
+            ////return _configurationRoot.GetSection("Logging");
         }
     }
 }
