@@ -16,18 +16,16 @@ namespace ConsoleAppLogger
         private readonly ILoggerFactory loggerFactory;
         private readonly string eventLogName;
         private readonly ITelemetryChannel telemetryChannel;
-        private readonly ConcurrentDictionary<Type, ILogger> loggersDictionary = new ConcurrentDictionary<Type, ILogger>();
+        private readonly ConcurrentDictionary<string, ILogger> loggersDictionary = new ConcurrentDictionary<string, ILogger>();
 
         public LoggerProvider(string eventLogName, Func<IConfiguration> loggingConfigurationDelegate, string appInsightsInstrumentationKey = null)
         {
             this.eventLogName = eventLogName;
 
             telemetryChannel = new InMemoryChannel();
-
             loggerFactory = new LoggerFactory();
             loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder.Services.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = telemetryChannel);
                 builder
                 .ClearProviders()
                 .AddConfiguration(loggingConfigurationDelegate())
@@ -35,14 +33,21 @@ namespace ConsoleAppLogger
                             .AddDebug()
 #endif
                             .AddConsole()
-                .AddEventSourceLogger()
+                .AddEventSourceLogger();
                 /*
                  * If the appInsightsInstrumentationKey is null/Empty, no problem. No Application
                  * Insights logging will occur. So local machine doesn't need this setting.
                  * When deployed to Azure, need to ensure ApplicationInsights:InstrumentationKey
                  * setting is present and valid
-                 */
-                .AddApplicationInsights(appInsightsInstrumentationKey);
+                */
+                builder.Services.Configure<TelemetryConfiguration>(telemetryConfiguration =>
+                {
+                    telemetryConfiguration.TelemetryChannel = telemetryChannel;
+                    telemetryConfiguration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+                    telemetryConfiguration.InstrumentationKey = appInsightsInstrumentationKey;
+                });
+
+                builder.AddApplicationInsights();                
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
@@ -58,9 +63,9 @@ namespace ConsoleAppLogger
             });
         }
 
-        public ILogger CreateLogger<T>()
+        public ILogger CreateLogger()
         {
-            return loggersDictionary.GetOrAdd(typeof(T), loggerFactory.CreateLogger<T>());
+            return loggersDictionary.GetOrAdd(eventLogName, loggerFactory.CreateLogger(eventLogName));
         }
 
         private void Dispose(bool disposing)
