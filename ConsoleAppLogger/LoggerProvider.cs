@@ -44,8 +44,8 @@ namespace ConsoleAppLogger
                 {
                     telemetryConfiguration.TelemetryChannel = telemetryChannel;
                     telemetryConfiguration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
-                    telemetryConfiguration.InstrumentationKey = appInsightsInstrumentationKey;
-                });
+                    telemetryConfiguration.InstrumentationKey = appInsightsInstrumentationKey;                    
+                });                
 
                 builder.AddApplicationInsights();                
 
