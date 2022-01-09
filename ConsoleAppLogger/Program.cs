@@ -1,29 +1,25 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ConsoleAppLogger
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             var executionStep = ExecutionStep.Entered;
             
             var configurationProvider = new ConfigurationProvider();
-            var loggerProvider = new LoggerProvider(nameof(ConsoleAppLogger), configurationProvider.GetLoggingConfiguration, configurationProvider.GetAppInsightsInstrumentationKey());
+            var loggerProvider = new LoggerProvider("YouTube.Logs", configurationProvider.GetLoggingConfiguration, configurationProvider.GetAppInsightsInstrumentationKey());
             var logger = loggerProvider.CreateLogger();
+            var appLogger = new ApplicationLogger(logger);  
 
             executionStep = ExecutionStep.LoggerCreated;
 
             try
             {
                 executionStep = ExecutionStep.Step1;
-                ////throw new IntentionalException("This is the Exception Message");
+                throw new IntentionalException("This is the Exception Message");
                 logger.LogDebug(1, "In {MethodName}. In ExecutionStep: {ExecutionStep}. This is a Debug Level Log - Getting item {Id}", nameof(Main), executionStep, 40);
                 
                 executionStep = ExecutionStep.Step2;
@@ -37,7 +33,8 @@ namespace ConsoleAppLogger
             catch (Exception e)
             {   
                 logger.LogInformation(4, "In ExecutionStep: {ExecutionStep}. We Should only see this when an Exception occurs and LogLevel == Error", executionStep);                
-                logger.LogError(5, e, "An Exception occured during the processing of Blah. In ExecutionStep: {ExecutionStep}. Exception Type: {ExceptionType} with Message: {ExceptionMessage}", executionStep, e.GetType().Name, e.Message);             
+                logger.LogError(5, e, "An Exception occured during the processing of Blah. In ExecutionStep: {ExecutionStep}. Exception Type: {ExceptionType} with Message: {ExceptionMessage}", executionStep, e.GetType().Name, e.Message);
+                appLogger.LogException()
             }
             finally
             {
