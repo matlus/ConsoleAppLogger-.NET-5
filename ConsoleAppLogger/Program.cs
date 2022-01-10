@@ -32,9 +32,8 @@ namespace ConsoleAppLogger
             }
             catch (Exception e)
             {   
-                logger.LogInformation(4, "In ExecutionStep: {ExecutionStep}. We Should only see this when an Exception occurs and LogLevel == Error", executionStep);                
-                logger.LogError(5, e, "An Exception occured during the processing of Blah. In ExecutionStep: {ExecutionStep}. Exception Type: {ExceptionType} with Message: {ExceptionMessage}", executionStep, e.GetType().Name, e.Message);
-                appLogger.LogException()
+                logger.LogInformation(4,"In ExecutionStep: {ExecutionStep}. We Should only see this when an Exception occurs and LogLevel == Error", executionStep);                
+                logger.LogError(5, "An Exception occured during the processing of Blah. In ExecutionStep: {ExecutionStep}. Exception Type: {ExceptionType} with Message: {ExceptionMessage}", executionStep, e.GetType().Name, e.Message);
             }
             finally
             {
