@@ -3,7 +3,7 @@ using System;
 
 namespace ConsoleAppLogger
 {
-    internal sealed partial class ApplicationLogger
+    internal sealed class ApplicationLogger
     {
         private readonly ILogger _logger;
         public ApplicationLogger(ILogger logger)
