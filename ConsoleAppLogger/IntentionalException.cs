@@ -2,8 +2,6 @@
 
 namespace ConsoleAppLogger
 {
-
-
     [Serializable]
     public class IntentionalException : Exception
     {
