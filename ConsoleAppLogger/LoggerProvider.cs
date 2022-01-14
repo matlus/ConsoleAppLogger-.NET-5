@@ -32,6 +32,7 @@ namespace ConsoleAppLogger
 #if DEBUG
                             .AddDebug()
 #endif
+                            
                             .AddConsole()
                 .AddEventSourceLogger();
                 /*

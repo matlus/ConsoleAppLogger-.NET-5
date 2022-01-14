@@ -3,7 +3,7 @@ using System;
 
 namespace ConsoleAppLogger
 {
-    internal sealed class ApplicationLogger
+    internal sealed partial class ApplicationLogger
     {
         private readonly ILogger _logger;
         public ApplicationLogger(ILogger logger)
@@ -11,27 +11,48 @@ namespace ConsoleAppLogger
             _logger = logger;
         }
 
-        public void LogException<T1, T2, T3>(int eventId, Exception exception, string message, T1 param1, T2 param2, T3 param3)
+        public void LogError<T1, T2, T3>(int eventId, Exception exception, string message, T1 param1, T2 param2, T3 param3)
         {
-            if (_logger.IsEnabled(LogLevel.Error))
+            _logger.LogError(eventId, exception, message, param1, param2, param3);
+        }
+
+        public void LogWarning<T1, T2>(int eventId, string message, T1 param1, T2 param2)
+        {
+            if (_logger.IsEnabled(LogLevel.Warning))
             {
-                _logger.LogError(eventId, exception, message, param1, param2, param3);
+                _logger.LogWarning(eventId, message, param1, param2);
+            }
+        }
+        
+        public void LogInformation<T1>(int eventId, string message, T1 param1)
+        {
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(eventId, message, param1);
             }
         }
 
-        public void LogException<T1, T2, T3, T4>(int eventId, Exception exception, string message, T1 param1, T2 param2, T3 param3, T4 param4)
+        public void LogInformation<T1, T2>(int eventId, string message, T1 param1, T2 param2)
         {
-            if (_logger.IsEnabled(LogLevel.Error))
+            if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogError(eventId, exception, message, param1, param2, param3, param4);
+                _logger.LogInformation(eventId, message, param1, param2);
             }
         }
 
-        public void LogException<T1, T2, T3, T4, T5>(int eventId, Exception exception, string message, T1 param1, T2 param2, T3 param3, T4 param4, T5 param5)
+        public void LogInformation<T1, T2, T3>(int eventId, string message, T1 param1, T2 param2, T3 param3)
         {
-            if (_logger.IsEnabled(LogLevel.Error))
+            if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogError(eventId, exception, message, param1, param2, param3, param4, param5);
+                _logger.LogInformation(eventId, message, param1, param2, param3);
+            }
+        }
+
+        public void LogDebug<T1, T2, T3>(int eventId, string message, T1 param1, T2 param2, T3 param3)
+        {
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(eventId, message, param1, param2, param3);
             }
         }
     }
