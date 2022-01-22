@@ -75,6 +75,7 @@ namespace ConsoleAppLogger
             {
                 telemetryChannel.Flush();
                 telemetryChannel.Dispose();
+                loggerFactory.Dispose();
                 _disposed = true;
             }
         }
